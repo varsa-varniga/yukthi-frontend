@@ -8,6 +8,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Box from "@mui/material/Box";
 import GoogleTranslate from "../googletranslate/GoogleTranslate";
 import { useNavigate } from "react-router-dom";
+import AuthSystem from "../authentication/AuthSystem";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -74,10 +75,10 @@ const Navbar = () => {
           >
             Features
           </Button>
-
-          {/* Google Translate */}
-          <Box sx={{ display: "flex", alignItems: "center", mx: 1 }}>
+          {/* google translate and auth system */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <GoogleTranslate />
+            <AuthSystem />
           </Box>
         </Box>
       </Toolbar>
