@@ -81,6 +81,7 @@ const SprouterProfileSystem = () => {
     { id: 'ai', icon: Brain, label: 'Farmer Readiness AI', desc: 'AI-powered assessment', color: '#a855f7' },
     { id: 'financial', icon: Wallet, label: 'Financial Empower', desc: 'Financial tools & schemes', color: '#22c55e' },
     { id: 'land', icon: Home, label: 'Land Leasing Hub', desc: 'Find or lease land', color: '#f97316' },
+      { id: 'soil', icon: Sprout, label: 'Soil Connect', desc: 'Soil testing & analysis', color: '#10b981' },
     { id: 'smart', icon: Cpu, label: 'Smart Farming', desc: 'IoT & precision farming', color: '#06b6d4' },
     { id: 'community', icon: Users, label: 'Crop Circle', desc: 'Connect with farmers', color: '#ec4899' },
     { id: 'market', icon: ShoppingBag, label: 'Farm Market', desc: 'Buy & sell products', color: '#14b8a6' },
@@ -257,14 +258,68 @@ const SprouterProfileSystem = () => {
     });
   };
 
+// In your SprouterDashboard.jsx - Update the handleFeatureClick function
 const handleFeatureClick = (featureId) => {
   setActiveFeature(featureId);
   setIsEditing(false);
   
-  // Move the navigation logic inside the function
   if (featureId === 'land') {
     navigate('/land-leasing');
   }
+ 
+  if (featureId === 'soil') {
+    navigate('/soil-connect');
+  }
+
+  if (featureId === 'market') {
+    navigate('/ecom');
+  }
+
+  // ✅ UPDATED: CROP CIRCLE AUTO-LOGIN WITH PROPER FIX
+  if (featureId === 'community') {
+    const sprouterUser = localStorage.getItem('sprouterData');
+    const userData = sprouterUser ? JSON.parse(sprouterUser) : null;
+    
+    if (userData) {
+      console.log("Auto-login to CropCircle with Sprouter data:", userData);
+      
+      // Create proper user object for CropCircle
+      const cropCircleUser = {
+        _id: userData._id || userData.id || generateMongoId(),
+        name: userData.fullName,
+        email: userData.email,
+        phone: userData.phone,
+        experience_level: userData.experience || 'beginner',
+        profile_photo: null,
+        crop_name: userData.mainCrops || '',
+        district: userData.district || '',
+        state: userData.state || '',
+        isSprouter: true,
+        // Mark profile as completed to skip complete-profile page
+        profile_completed: true
+      };
+      
+      // Store in all locations
+      localStorage.setItem('user', JSON.stringify(cropCircleUser));
+      localStorage.setItem('cc_user', JSON.stringify(cropCircleUser));
+      localStorage.setItem('sprouterData', JSON.stringify(userData));
+      
+      // ✅ Go directly to home page, skip complete profile
+      navigate('/cropcircle/home');
+    } else {
+      navigate('/cropcircle/login');
+    }
+  }
+};
+
+// ✅ ADD THIS FUNCTION FOR MONGO-LIKE ID GENERATION
+const generateMongoId = () => {
+  const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
+  const random = Array(16)
+    .fill(0)
+    .map(() => Math.floor(Math.random() * 16).toString(16))
+    .join('');
+  return timestamp + random;
 };
 
 
@@ -722,36 +777,7 @@ const handleFeatureClick = (featureId) => {
       </div>
 
       {/* Logout Button - Bottom Left */}
-      <button 
-        onClick={handleLogout}
-        style={{
-          position: 'fixed',
-          bottom: '32px',
-          left: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '10px 20px',
-          border: '1px solid #dc2626',
-          borderRadius: '8px',
-          backgroundColor: '#fef2f2',
-          color: '#dc2626',
-          fontSize: '14px',
-          fontWeight: '500',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          zIndex: 10
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = '#fee2e2';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = '#fef2f2';
-        }}
-      >
-        <LogOut size={16} />
-        <span>Logout</span>
-      </button>
+
     </div>
   );
 
@@ -897,14 +923,15 @@ const handleFeatureClick = (featureId) => {
     return (
       <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f9fafb', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         {/* Sidebar */}
-        <div style={{
-          width: sidebarOpen ? '320px' : '0',
-          transition: 'width 0.3s',
-          backgroundColor: 'white',
-          borderRight: '1px solid #e5e7eb',
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
+ <div style={{
+  width: sidebarOpen ? '320px' : '0',
+  transition: 'width 0.3s',
+  backgroundColor: 'white',
+  borderRight: '1px solid #e5e7eb',
+  //overflowY: 'auto', // ← Itha change
+  //overflowX: 'hidden', // ← Itha add pannu
+  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+}}>
           <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
@@ -940,7 +967,13 @@ const handleFeatureClick = (featureId) => {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '4px',
+                  //maxHeight: 'calc(100vh - 200px)', // ← Itha add pannu
+                 // overflowY: 'auto' // ← Itha add pannu
+                  }}>
                 {dashboardFeatures.map((feature, idx) => {
                   const Icon = feature.icon;
                   const isActive = activeFeature === feature.id;

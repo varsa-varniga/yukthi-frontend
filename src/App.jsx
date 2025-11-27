@@ -1,6 +1,7 @@
 // src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
 import "./App.css";
 
 // Public pages
@@ -21,9 +22,8 @@ import RoleSelection from "./authentication/RoleSelection.jsx";
 import SprouterDashboard from "./authentication/SprouterDashboard.jsx";
 import CultivatorDashboard from "./authentication/CultivatorDashboard.jsx";
 
-// Land Leasing - Updated imports based on actual file structure
+// Land Leasing
 import LandHome from "./landleasing/LandHome.jsx";
-// Remove Explore import since file doesn't exist
 import ListYourLand from "./landleasing/landlist/ListYourLand.jsx";
 import FileExplorerDemo from "./landleasing/FileExplorerDemo/FileExplorerDemo.jsx";
 import DashboardHome from "./landleasing/dashboard/Home.jsx";
@@ -33,63 +33,149 @@ import Document from "./landleasing/dashboard/Document.jsx";
 import ViewAgreement from "./landleasing/dashboard/ViewAgreement.jsx";
 import Explore from "./landleasing/pages/Explore.jsx";
 
+// Soil Connect & Ecommerce
+import SoilConnect from "./soilconnect/SoilConnect.jsx";
+import Ecom from "./ecommerce/Ecom.jsx"
+
 // Layout
 import Layout from "./layout/Layout.jsx";
 
+// CropCircle App Components
+import { AuthProvider } from "./cropcircle/context/AuthContext";
+import ProtectedRoute from "./cropcircle/components/ProtectedRoute";
+import BottomNav from "./cropcircle/components/BottomNav";
+import theme from "./cropcircle/theme/theme";
+
+// Import CropCircle pages
+import FeedPage from "./cropcircle/pages/FeedPage";
+import ProfilePage from "./cropcircle/pages/ProfilePage";
+import UserFeedPage from "./cropcircle/pages/UserFeedPage";
+import Login from "./cropcircle/pages/LoginPage";
+import SignUpPage from "./cropcircle/pages/SignUpPage";
+import CompleteProfilePage from "./cropcircle/pages/CompleteProfilePage";
+import NotificationsPage from "./cropcircle/pages/NotificationsPage";
+
+// Layout for all protected pages
+const ProtectedLayout = ({ children }) => (
+  <>
+    {children}
+    <BottomNav />
+  </>
+);
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* PUBLIC PAGES */}
+            <Route element={<Layout />}>
+              <Route path="/" element={<HeroPage />} />
+              <Route
+                path="/features"
+                element={
+                  <>
+                    <Welcome />
+                    <Climate />
+                    <Disease />
+                    <Fertilizer />
+                    <Carbon />
+                    <Chat />
+                    <Hubs />
+                  </>
+                }
+              />
+              <Route path="/about" element={<AboutUs />} />
+            </Route>
 
-        {/* PUBLIC PAGES */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<HeroPage />} />
-          <Route
-            path="/features"
-            element={
-              <>
-                <Welcome />
-                <Climate />
-                <Disease />
-                <Fertilizer />
-                <Carbon />
-                <Chat />
-                <Hubs />
-              </>
-            }
-          />
-          <Route path="/about" element={<AboutUs />} />
-        </Route>
+            {/* AUTH */}
+            <Route path="/login" element={<AuthSystem />} />
+            <Route path="/glogin" element={<GLogin />} />
+            <Route path="/select-role" element={<RoleSelection />} />
 
-        {/* AUTH */}
-        <Route path="/login" element={<AuthSystem />} />
-        <Route path="/glogin" element={<GLogin />} />
-        <Route path="/select-role" element={<RoleSelection />} />
+            {/* DASHBOARDS */}
+            <Route path="/sprouter" element={<SprouterDashboard />} />
+            <Route path="/cultivator" element={<CultivatorDashboard />} />
 
-        {/* DASHBOARDS */}
-        <Route path="/sprouter" element={<SprouterDashboard />} />
-        <Route path="/cultivator" element={<CultivatorDashboard />} />
+            {/* LAND LEASING */}
+            <Route path="/land-leasing" element={<LandHome />} />
+            <Route path="/list-land" element={<ListYourLand />} />
+            <Route path="/file-explorer" element={<FileExplorerDemo />} />
+            <Route path="/explore" element={<Explore />} />
+            
+            {/* SOIL CONNECT */}
+            <Route path="/soil-connect" element={<SoilConnect />} />
 
-        {/* LAND LEASING */}
-        <Route path="/land-leasing" element={<LandHome />} />
-        {/* Remove /explore route since Explore.jsx doesn't exist */}
-        <Route path="/list-land" element={<ListYourLand />} />
-        <Route path="/file-explorer" element={<FileExplorerDemo />} />
-          <Route path="/explore" element={<Explore />} />
-          
-        
-        {/* Dashboard shell with nested routes */}
-        <Route path="/dashboard" element={<DashboardHome />}>
-          <Route index element={<MyLease />} />            {/* /dashboard */}
-          <Route path="saved" element={<SavedLand />} />   {/* /dashboard/saved */}
-          <Route path="documents" element={<Document />} />{/* /dashboard/documents */}
-          
-        </Route>
+            <Route path="/ecom" element={<Ecom />} />
+            
+            {/* Dashboard shell with nested routes */}
+            <Route path="/dashboard" element={<DashboardHome />}>
+              <Route index element={<MyLease />} />
+              <Route path="saved" element={<SavedLand />} />
+              <Route path="documents" element={<Document />} />
+            </Route>
 
-        <Route path="/view-agreement" element={<ViewAgreement />} />
+            <Route path="/view-agreement" element={<ViewAgreement />} />
 
-      </Routes>
-    </BrowserRouter>
+            {/* CROPCIRCLE ROUTES */}
+            {/* Public CropCircle Routes */}
+            <Route path="/cropcircle/register" element={<SignUpPage />} />
+            <Route path="/cropcircle" element={<Login />} />
+            <Route path="/cropcircle/login" element={<Login />} />
+            <Route path="/cropcircle/complete-profile" element={<CompleteProfilePage />} />
+
+            {/* Protected CropCircle Routes */}
+            <Route
+              path="/cropcircle/home"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <FeedPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/cropcircle/notifications"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <NotificationsPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/cropcircle/profile"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <ProfilePage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/cropcircle/profile/:userId/feed"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <UserFeedPage />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Optional catch-all */}
+            <Route path="*" element={<h2>Page Not Found</h2>} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
