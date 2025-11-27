@@ -322,7 +322,6 @@ const generateMongoId = () => {
   return timestamp + random;
 };
 
-
   const handleEditProfile = () => {
     setEditProfileData({...profileData});
     setIsEditing(true);
