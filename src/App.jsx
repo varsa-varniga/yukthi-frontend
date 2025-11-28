@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import "./App.css";
 
@@ -35,7 +35,10 @@ import Explore from "./landleasing/pages/Explore.jsx";
 
 // Soil Connect & Ecommerce
 import SoilConnect from "./soilconnect/SoilConnect.jsx";
-import Ecom from "./ecommerce/Ecom.jsx"
+import Ecom from "./ecommerce/Ecom.jsx";
+
+// Carbon Credit
+import FarmerCarbonCreditCalculator from "./carboncredit/CarbonCreditMonetization.jsx";
 
 // Layout
 import Layout from "./layout/Layout.jsx";
@@ -55,6 +58,9 @@ import SignUpPage from "./cropcircle/pages/SignUpPage";
 import CompleteProfilePage from "./cropcircle/pages/CompleteProfilePage";
 import NotificationsPage from "./cropcircle/pages/NotificationsPage";
 
+// Firebase Auth Provider
+import { AuthProvider as FirebaseAuthProvider } from "./context/AuthContext";
+
 // Layout for all protected pages
 const ProtectedLayout = ({ children }) => (
   <>
@@ -66,115 +72,126 @@ const ProtectedLayout = ({ children }) => (
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* PUBLIC PAGES */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<HeroPage />} />
+      <FirebaseAuthProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* PUBLIC PAGES */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<HeroPage />} />
+                <Route
+                  path="/features"
+                  element={
+                    <>
+                      <Welcome />
+                      <Climate />
+                      <Disease />
+                      <Fertilizer />
+                      <Carbon />
+                      <Chat />
+                      <Hubs />
+                    </>
+                  }
+                />
+                <Route path="/about" element={<AboutUs />} />
+              </Route>
+
+              {/* AUTH */}
+              <Route path="/login" element={<AuthSystem />} />
+              <Route path="/glogin" element={<GLogin />} />
+              <Route path="/select-role" element={<RoleSelection />} />
+
+              {/* DASHBOARDS */}
+              <Route path="/sprouter" element={<SprouterDashboard />} />
+              <Route path="/cultivator" element={<CultivatorDashboard />} />
+
+              {/* LAND LEASING */}
+              <Route path="/land-leasing" element={<LandHome />} />
+              <Route path="/list-land" element={<ListYourLand />} />
+              <Route path="/file-explorer" element={<FileExplorerDemo />} />
+              <Route path="/explore" element={<Explore />} />
+
+              {/* SOIL CONNECT */}
+              <Route path="/soil-connect" element={<SoilConnect />} />
+
+              <Route path="/ecom" element={<Ecom />} />
+
+              {/* CARBON CREDIT - PROTECTED ROUTE */}
               <Route
-                path="/features"
+                path="/carbon-credit"
+                element={<FarmerCarbonCreditCalculator />}
+              />
+
+              {/* Dashboard shell with nested routes */}
+              <Route path="/dashboard" element={<DashboardHome />}>
+                <Route index element={<MyLease />} />
+                <Route path="saved" element={<SavedLand />} />
+                <Route path="documents" element={<Document />} />
+              </Route>
+
+              <Route path="/view-agreement" element={<ViewAgreement />} />
+
+              {/* CROPCIRCLE ROUTES */}
+              {/* Public CropCircle Routes */}
+              <Route path="/cropcircle/register" element={<SignUpPage />} />
+              <Route path="/cropcircle" element={<Login />} />
+              <Route path="/cropcircle/login" element={<Login />} />
+              <Route
+                path="/cropcircle/complete-profile"
+                element={<CompleteProfilePage />}
+              />
+
+              {/* Protected CropCircle Routes */}
+              <Route
+                path="/cropcircle/home"
                 element={
-                  <>
-                    <Welcome />
-                    <Climate />
-                    <Disease />
-                    <Fertilizer />
-                    <Carbon />
-                    <Chat />
-                    <Hubs />
-                  </>
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <FeedPage />
+                    </ProtectedLayout>
+                  </ProtectedRoute>
                 }
               />
-              <Route path="/about" element={<AboutUs />} />
-            </Route>
 
-            {/* AUTH */}
-            <Route path="/login" element={<AuthSystem />} />
-            <Route path="/glogin" element={<GLogin />} />
-            <Route path="/select-role" element={<RoleSelection />} />
+              <Route
+                path="/cropcircle/notifications"
+                element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <NotificationsPage />
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* DASHBOARDS */}
-            <Route path="/sprouter" element={<SprouterDashboard />} />
-            <Route path="/cultivator" element={<CultivatorDashboard />} />
+              <Route
+                path="/cropcircle/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ProfilePage />
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* LAND LEASING */}
-            <Route path="/land-leasing" element={<LandHome />} />
-            <Route path="/list-land" element={<ListYourLand />} />
-            <Route path="/file-explorer" element={<FileExplorerDemo />} />
-            <Route path="/explore" element={<Explore />} />
-            
-            {/* SOIL CONNECT */}
-            <Route path="/soil-connect" element={<SoilConnect />} />
+              <Route
+                path="/cropcircle/profile/:userId/feed"
+                element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <UserFeedPage />
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/ecom" element={<Ecom />} />
-            
-            {/* Dashboard shell with nested routes */}
-            <Route path="/dashboard" element={<DashboardHome />}>
-              <Route index element={<MyLease />} />
-              <Route path="saved" element={<SavedLand />} />
-              <Route path="documents" element={<Document />} />
-            </Route>
-
-            <Route path="/view-agreement" element={<ViewAgreement />} />
-
-            {/* CROPCIRCLE ROUTES */}
-            {/* Public CropCircle Routes */}
-            <Route path="/cropcircle/register" element={<SignUpPage />} />
-            <Route path="/cropcircle" element={<Login />} />
-            <Route path="/cropcircle/login" element={<Login />} />
-            <Route path="/cropcircle/complete-profile" element={<CompleteProfilePage />} />
-
-            {/* Protected CropCircle Routes */}
-            <Route
-              path="/cropcircle/home"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <FeedPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/cropcircle/notifications"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <NotificationsPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/cropcircle/profile"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <ProfilePage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/cropcircle/profile/:userId/feed"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <UserFeedPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Optional catch-all */}
-            <Route path="*" element={<h2>Page Not Found</h2>} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+              {/* Optional catch-all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </FirebaseAuthProvider>
     </ThemeProvider>
   );
 }
