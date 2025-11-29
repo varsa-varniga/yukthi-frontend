@@ -26,6 +26,7 @@ import {
   Save,
   ArrowLeft,
 } from "lucide-react";
+import App from "../learningpathcomponents/App";
 
 // Hardcoded API URL - remove process.env completely
 const API_BASE_URL = "http://localhost:5000/api";
@@ -64,6 +65,71 @@ const api = {
   },
 };
 
+const LearningPathWrapper = ({ user, onBackToDashboard }) => {
+  const [learningPathUser, setLearningPathUser] = useState(null);
+  const [language, setLanguage] = useState(null);
+
+  useEffect(() => {
+    // Get user data from sessionStorage
+    const storedUser = sessionStorage.getItem("learningPathUser");
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setLearningPathUser(userData);
+      setLanguage(userData.language);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("currentUserEmail");
+    sessionStorage.removeItem("learningPathUser");
+    onBackToDashboard();
+  };
+
+  if (!learningPathUser || !language) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Learning Path...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Add a back button */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          zIndex: 100,
+        }}
+      >
+        <button
+          onClick={onBackToDashboard}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "white",
+            border: "1px solid #d1d5db",
+            borderRadius: "8px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+
+      {/* Your existing Learning Path App */}
+      <App />
+    </div>
+  );
+};
+
 const SprouterProfileSystem = () => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState("profile");
@@ -75,6 +141,8 @@ const SprouterProfileSystem = () => {
   const [activeFeature, setActiveFeature] = useState("dashboard");
   const [isEditing, setIsEditing] = useState(false);
   const [editProfileData, setEditProfileData] = useState({});
+  const [showLanguageSelection, setShowLanguageSelection] = useState(false); // Add this
+  const [selectedLanguage, setSelectedLanguage] = useState(null); // Add this
   const [profileData, setProfileData] = useState({
     fullName: "",
     phone: "",
@@ -121,7 +189,7 @@ const SprouterProfileSystem = () => {
       id: "learning",
       icon: BookOpen,
       label: "Learning Path",
-      desc: "Structured learning modules",
+      desc: "Interactive courses to enhance your farming knowledge and earn rewards",
       color: "#3b82f6",
     },
     {
@@ -198,6 +266,59 @@ const SprouterProfileSystem = () => {
       setProfileData((prev) => ({ ...prev, ...sprouter }));
     }
   }, []);
+
+  // Get current user data (you'll need to replace this with your actual user data)
+  const getCurrentUser = () => {
+    // Try to get from main authentication
+    const mainUser = localStorage.getItem("currentUser");
+    if (mainUser) {
+      return JSON.parse(mainUser);
+    }
+
+    // Try to get from sprouter data
+    const sprouterData = localStorage.getItem("sprouterData");
+    if (sprouterData) {
+      const sprouter = JSON.parse(sprouterData);
+      return {
+        email: sprouter.email,
+        name: sprouter.fullName,
+      };
+    }
+
+    // Try to get from learning path session
+    const learningPathUser = sessionStorage.getItem("learningPathUser");
+    if (learningPathUser) {
+      return JSON.parse(learningPathUser);
+    }
+
+    // Fallback - return null or default
+    return null;
+  };
+
+  // Use it like this:
+  const currentUser = getCurrentUser() || {
+    email: "guest@agrovihan.com",
+    name: "Guest User",
+  };
+
+  const navigateToLearningPath = () => {
+    const currentUser = getCurrentUser(); // Using the function from Solution 1
+
+    if (!currentUser) {
+      alert("Please sign in first");
+      return;
+    }
+    // Store user data in session before navigating
+    sessionStorage.setItem(
+      "learningPathUser",
+      JSON.stringify({
+        email: currentUser.email,
+        name: currentUser.name,
+        // include any other user data you need
+      })
+    );
+    navigate("/learning-path");
+  };
 
   const validateStep = () => {
     const newErrors = {};
@@ -388,9 +509,16 @@ const SprouterProfileSystem = () => {
   };
 
   // In your SprouterDashboard.jsx - Update the handleFeatureClick function
+  // In your SprouterDashboard.jsx - Update the handleFeatureClick function
   const handleFeatureClick = (featureId) => {
     setActiveFeature(featureId);
     setIsEditing(false);
+
+    if (featureId === "learning") {
+      // Show language selection for learning path
+      setShowLanguageSelection(true);
+      return;
+    }
 
     if (featureId === "land") {
       navigate("/land-leasing");
@@ -404,20 +532,16 @@ const SprouterProfileSystem = () => {
       navigate("/ecom");
     }
 
-    // ✅ ADD CARBON CREDIT NAVIGATION
     if (featureId === "carbon") {
       navigate("/carbon-credit");
     }
 
-    // ✅ CROP CIRCLE AUTO-LOGIN WITH PROPER FIX
     if (featureId === "community") {
       const sprouterUser = localStorage.getItem("sprouterData");
       const userData = sprouterUser ? JSON.parse(sprouterUser) : null;
 
       if (userData) {
         console.log("Auto-login to CropCircle with Sprouter data:", userData);
-
-        // Create proper user object for CropCircle
         const cropCircleUser = {
           _id: userData._id || userData.id || generateMongoId(),
           name: userData.fullName,
@@ -429,16 +553,12 @@ const SprouterProfileSystem = () => {
           district: userData.district || "",
           state: userData.state || "",
           isSprouter: true,
-          // Mark profile as completed to skip complete-profile page
           profile_completed: true,
         };
 
-        // Store in all locations
         localStorage.setItem("user", JSON.stringify(cropCircleUser));
         localStorage.setItem("cc_user", JSON.stringify(cropCircleUser));
         localStorage.setItem("sprouterData", JSON.stringify(userData));
-
-        // ✅ Go directly to home page, skip complete profile
         navigate("/cropcircle/home");
       } else {
         navigate("/cropcircle/login");
@@ -488,6 +608,219 @@ const SprouterProfileSystem = () => {
     setActiveFeature("dashboard");
     setIsEditing(false);
   };
+
+  // === ADD LANGUAGE SELECTION MODAL HERE ===
+  const LanguageSelectionModal = () => (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          borderRadius: "16px",
+          padding: "32px",
+          maxWidth: "500px",
+          width: "90%",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}
+        >
+          Choose Your Learning Language
+        </h2>
+        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
+          Select your preferred language for the learning path
+        </p>
+
+        <div style={{ display: "grid", gap: "16px" }}>
+          <button
+            onClick={() => {
+              setSelectedLanguage("tamil");
+              setShowLanguageSelection(false);
+              initializeLearningPath("tamil");
+            }}
+            style={{
+              padding: "16px",
+              border: "2px solid #e5e7eb",
+              borderRadius: "12px",
+              backgroundColor: "white",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = "#f59e0b";
+              e.target.style.backgroundColor = "#fffbeb";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = "#e5e7eb";
+              e.target.style.backgroundColor = "white";
+            }}
+          >
+            <span style={{ fontSize: "24px" }}>🇮🇳</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontWeight: "bold" }}>தமிழ்</div>
+              <div style={{ fontSize: "14px", color: "#6b7280" }}>Tamil</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedLanguage("english");
+              setShowLanguageSelection(false);
+              initializeLearningPath("english");
+            }}
+            style={{
+              padding: "16px",
+              border: "2px solid #e5e7eb",
+              borderRadius: "12px",
+              backgroundColor: "white",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = "#3b82f6";
+              e.target.style.backgroundColor = "#eff6ff";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = "#e5e7eb";
+              e.target.style.backgroundColor = "white";
+            }}
+          >
+            <span style={{ fontSize: "24px" }}>🌍</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontWeight: "bold" }}>English</div>
+              <div style={{ fontSize: "14px", color: "#6b7280" }}>English</div>
+            </div>
+          </button>
+        </div>
+
+        <button
+          onClick={() => setShowLanguageSelection(false)}
+          style={{
+            marginTop: "16px",
+            padding: "8px 16px",
+            border: "1px solid #d1d5db",
+            borderRadius: "8px",
+            backgroundColor: "white",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+  // === END LANGUAGE SELECTION MODAL ===
+
+  // === ADD initializeLearningPath FUNCTION HERE ===
+  // In SprouterDashboard.jsx - update the initializeLearningPath function
+  // In SprouterDashboard.jsx - update the initializeLearningPath function
+  // In SprouterDashboard.jsx - update initializeLearningPath function
+  const initializeLearningPath = (language) => {
+    console.log("🚀 Initializing Learning Path with language:", language);
+
+    const mainUser = localStorage.getItem("currentUser");
+    const sprouterData = localStorage.getItem("sprouterData");
+
+    let userData;
+
+    if (mainUser) {
+      try {
+        userData = JSON.parse(mainUser);
+        if (userData && userData.email && userData.email !== "") {
+          console.log("📱 Valid user from main auth:", userData);
+        } else {
+          throw new Error("Invalid user data in mainUser");
+        }
+      } catch (error) {
+        console.error("❌ Error parsing mainUser:", error);
+        userData = null;
+      }
+    }
+
+    if (!userData && sprouterData) {
+      try {
+        const sprouter = JSON.parse(sprouterData);
+        if (sprouter && sprouter.email && sprouter.email !== "") {
+          userData = {
+            email: sprouter.email,
+            name: sprouter.fullName,
+            fullName: sprouter.fullName,
+            phone: sprouter.phone || "",
+            farmTokens: sprouter.farmTokens || 0,
+            completedModules: sprouter.completedModules || [],
+            currentModule: sprouter.currentModule || 1,
+            moduleProgress: sprouter.moduleProgress || {},
+            badges: sprouter.badges || [],
+          };
+          console.log("🌱 Valid user from sprouter data:", userData);
+        }
+      } catch (error) {
+        console.error("❌ Error parsing sprouterData:", error);
+      }
+    }
+
+    if (!userData) {
+      // Create a guest user with a valid email
+      userData = {
+        email: "guest@agrovihan.com",
+        name: "Guest User",
+        fullName: "Guest User",
+        phone: "",
+        farmTokens: 0,
+        completedModules: [],
+        currentModule: 1,
+        moduleProgress: {},
+        badges: [],
+      };
+      console.log("👤 Using guest user data");
+    }
+
+    // Prepare complete user data for learning path
+    const learningPathUser = {
+      email: userData.email,
+      fullName: userData.fullName || userData.name,
+      language: language,
+      phone: userData.phone || "",
+      farmTokens: userData.farmTokens || 0,
+      completedModules: userData.completedModules || [],
+      currentModule: userData.currentModule || 1,
+      moduleProgress: userData.moduleProgress || {},
+      badges: userData.badges || [],
+    };
+
+    console.log("💾 Storing learning path user:", learningPathUser);
+
+    // Store in sessionStorage for learning path to access
+    sessionStorage.setItem("currentUserEmail", learningPathUser.email);
+    sessionStorage.setItem(
+      "learningPathUser",
+      JSON.stringify(learningPathUser)
+    );
+
+    // Set a flag to show learning path
+    setActiveFeature("learning-path-active");
+    console.log("✅ Learning path initialized successfully");
+  };
+  // === END initializeLearningPath FUNCTION ===
 
   // Profile Component
   const ProfilePage = () => (
@@ -1177,6 +1510,26 @@ const SprouterProfileSystem = () => {
     </div>
   );
 
+  // If language selection is shown
+  if (showLanguageSelection) {
+    return <LanguageSelectionModal />;
+  }
+
+  // If learning path is active
+  if (activeFeature === "learning-path-active") {
+    return (
+      <div style={{ height: "100vh" }}>
+        <LearningPathWrapper
+          user={profileData}
+          onBackToDashboard={() => {
+            setActiveFeature("dashboard");
+            setSelectedLanguage(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   // Dashboard View
   if (currentView === "dashboard") {
     return (
@@ -1582,8 +1935,88 @@ const SprouterProfileSystem = () => {
                   gap: "24px",
                 }}
               >
+                {/* Learning Path Card - Only One */}
+                <div
+                  onClick={navigateToLearningPath}
+                  style={{
+                    backgroundColor: "white",
+                    borderRadius: "16px",
+                    padding: "24px",
+                    border: "2px solid #dcfce7",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 10px 25px rgba(34, 197, 94, 0.2)";
+                    e.currentTarget.style.borderColor = "#22c55e";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 3px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.borderColor = "#dcfce7";
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      backgroundColor: "#22c55e",
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <BookOpen size={28} color="white" />
+                  </div>
+                  <h4
+                    style={{
+                      fontWeight: "bold",
+                      color: "#1f2937",
+                      marginBottom: "8px",
+                      fontSize: "18px",
+                    }}
+                  >
+                    Learning Path
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      marginBottom: "16px",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    Interactive courses to enhance your farming knowledge and
+                    earn rewards
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#22c55e",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    <span>Start Learning</span>
+                    <ArrowRight size={16} style={{ marginLeft: "8px" }} />
+                  </div>
+                </div>
+
+                {/* Other Features - Filter out learning path duplicate */}
                 {dashboardFeatures
-                  .filter((f) => f.id !== "dashboard" && f.id !== "profile")
+                  .filter(
+                    (f) =>
+                      f.id !== "dashboard" &&
+                      f.id !== "profile" &&
+                      f.id !== "learning"
+                  ) // Added f.id !== "learning" to filter out the duplicate
                   .map((feature, idx) => {
                     const Icon = feature.icon;
                     return (

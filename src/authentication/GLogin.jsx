@@ -15,7 +15,19 @@ export default function GLogin() {
     try {
       const { user } = await googleSignIn();
       console.log("Google User:", user);
-      navigate("/select-role"); // Navigate to role selection
+
+      // Store user data for learning path
+      const userData = {
+        email: user.email,
+        name: user.displayName || "User",
+        phone: user.phoneNumber || "",
+        // Add any other user data you need
+      };
+
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+      sessionStorage.setItem("learningPathUser", JSON.stringify(userData));
+
+      navigate("/select-role");
     } catch (err) {
       console.error(err);
       setError("Google login failed: " + err.message);
@@ -28,6 +40,17 @@ export default function GLogin() {
     try {
       const userCredential = await emailLogin(email, password);
       console.log("Email User:", userCredential.user);
+
+      // Store user data for learning path
+      const userData = {
+        email: email,
+        name: email.split("@")[0], // Use email prefix as name
+        phone: "",
+      };
+
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+      sessionStorage.setItem("learningPathUser", JSON.stringify(userData));
+
       navigate("/select-role");
     } catch (err) {
       console.error(err);
@@ -36,22 +59,26 @@ export default function GLogin() {
   };
 
   return (
-    <div style={{
-      height: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      flexDirection: "column",
-      backgroundColor: "#f5f5f5"
-    }}>
-      <div style={{
-        padding: 40,
-        borderRadius: 12,
-        boxShadow: "0px 0px 20px rgba(0,0,0,0.1)",
-        backgroundColor: "white",
-        minWidth: 320,
-        textAlign: "center"
-      }}>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+        backgroundColor: "#f5f5f5",
+      }}
+    >
+      <div
+        style={{
+          padding: 40,
+          borderRadius: 12,
+          boxShadow: "0px 0px 20px rgba(0,0,0,0.1)",
+          backgroundColor: "white",
+          minWidth: 320,
+          textAlign: "center",
+        }}
+      >
         <h2>Login / Sign Up</h2>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -60,7 +87,7 @@ export default function GLogin() {
           type="email"
           placeholder="Email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           style={{ padding: 8, width: "100%", margin: "10px 0" }}
         />
 
@@ -68,7 +95,7 @@ export default function GLogin() {
           type="password"
           placeholder="Password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           style={{ padding: 8, width: "100%", margin: "10px 0" }}
         />
 
@@ -79,7 +106,7 @@ export default function GLogin() {
             border: "1px solid black",
             cursor: "pointer",
             width: "100%",
-            margin: "10px 0"
+            margin: "10px 0",
           }}
           onClick={handleEmailLogin}
         >
@@ -96,7 +123,7 @@ export default function GLogin() {
             borderRadius: "6px",
             border: "none",
             cursor: "pointer",
-            width: "100%"
+            width: "100%",
           }}
           onClick={handleGoogleLogin}
         >

@@ -40,6 +40,9 @@ import Ecom from "./ecommerce/Ecom.jsx";
 // Carbon Credit
 import FarmerCarbonCreditCalculator from "./carboncredit/CarbonCreditMonetization.jsx";
 
+// Learning Path - Add this import
+import LearningPathApp from "./learningpathcomponents/App.jsx";
+
 // Layout
 import Layout from "./layout/Layout.jsx";
 
@@ -121,6 +124,9 @@ function App() {
                 path="/carbon-credit"
                 element={<FarmerCarbonCreditCalculator />}
               />
+
+              {/* LEARNING PATH - For direct access/testing */}
+              <Route path="/learning-path" element={<LearningPathApp />} />
 
               {/* Dashboard shell with nested routes */}
               <Route path="/dashboard" element={<DashboardHome />}>
