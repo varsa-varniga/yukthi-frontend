@@ -1,60 +1,24 @@
-// src/authentication/GLogin.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { googleSignIn, emailLogin } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 
 export default function GLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signInWithGoogle } = useAuth();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Google Login
   const handleGoogleLogin = async () => {
     setError("");
+    setLoading(true);
     try {
-      const { user } = await googleSignIn();
-      console.log("Google User:", user);
-
-      // Store user data for learning path
-      const userData = {
-        email: user.email,
-        name: user.displayName || "User",
-        phone: user.phoneNumber || "",
-        // Add any other user data you need
-      };
-
-      localStorage.setItem("currentUser", JSON.stringify(userData));
-      sessionStorage.setItem("learningPathUser", JSON.stringify(userData));
-
+      await signInWithGoogle();
       navigate("/select-role");
     } catch (err) {
       console.error(err);
       setError("Google login failed: " + err.message);
-    }
-  };
-
-  // Email/Password Login
-  const handleEmailLogin = async () => {
-    setError("");
-    try {
-      const userCredential = await emailLogin(email, password);
-      console.log("Email User:", userCredential.user);
-
-      // Store user data for learning path
-      const userData = {
-        email: email,
-        name: email.split("@")[0], // Use email prefix as name
-        phone: "",
-      };
-
-      localStorage.setItem("currentUser", JSON.stringify(userData));
-      sessionStorage.setItem("learningPathUser", JSON.stringify(userData));
-
-      navigate("/select-role");
-    } catch (err) {
-      console.error(err);
-      setError("Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,38 +44,7 @@ export default function GLogin() {
         }}
       >
         <h2>Login / Sign Up</h2>
-
         {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ padding: 8, width: "100%", margin: "10px 0" }}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: 8, width: "100%", margin: "10px 0" }}
-        />
-
-        <button
-          style={{
-            padding: "10px 20px",
-            borderRadius: "6px",
-            border: "1px solid black",
-            cursor: "pointer",
-            width: "100%",
-            margin: "10px 0",
-          }}
-          onClick={handleEmailLogin}
-        >
-          Login
-        </button>
 
         <hr style={{ margin: "20px 0" }} />
 
@@ -122,12 +55,13 @@ export default function GLogin() {
             padding: "10px 20px",
             borderRadius: "6px",
             border: "none",
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             width: "100%",
           }}
           onClick={handleGoogleLogin}
+          disabled={loading}
         >
-          Login with Google
+          {loading ? "Signing in..." : "Login with Google"}
         </button>
       </div>
     </div>

@@ -1,0 +1,5 @@
+[
+  { "state": "Tamil Nadu", "districts": ["Chennai", "Coimbatore", "Erode", "Salem", "Tirupur", "Madurai"] },
+  { "state": "Karnataka", "districts": ["Bangalore Urban", "Bangalore Rural", "Mysore", "Tumkur", "Mangalore"] },
+  { "state": "Kerala", "districts": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur"] }
+]

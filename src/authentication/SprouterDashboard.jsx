@@ -508,8 +508,6 @@ const SprouterProfileSystem = () => {
     });
   };
 
-  // In your SprouterDashboard.jsx - Update the handleFeatureClick function
-  // In your SprouterDashboard.jsx - Update the handleFeatureClick function
   const handleFeatureClick = (featureId) => {
     setActiveFeature(featureId);
     setIsEditing(false);
@@ -522,18 +520,34 @@ const SprouterProfileSystem = () => {
 
     if (featureId === "land") {
       navigate("/land-leasing");
+      return;
     }
 
     if (featureId === "soil") {
       navigate("/soil-connect");
+      return;
     }
 
     if (featureId === "market") {
       navigate("/ecom");
+      return;
+    }
+
+    // ✅ UPDATED: CROP CIRCLE - REDIRECT TO SIGNUP PAGE
+    if (featureId === "community") {
+      navigate("/cropcircle/select-crop");
+      return;
+    }
+
+    // For profile, stay in dashboard but show profile view
+    if (featureId === "profile") {
+      setActiveFeature("profile");
+      return;
     }
 
     if (featureId === "carbon") {
       navigate("/carbon-credit");
+      return;
     }
 
     if (featureId === "community") {
@@ -563,7 +577,10 @@ const SprouterProfileSystem = () => {
       } else {
         navigate("/cropcircle/login");
       }
+      return;
     }
+
+    console.log(`Feature clicked: ${featureId}`);
   };
 
   // ✅ ADD THIS FUNCTION FOR MONGO-LIKE ID GENERATION
@@ -841,7 +858,6 @@ const SprouterProfileSystem = () => {
           right: "32px",
           display: "flex",
           alignItems: "center",
-
           gap: "8px",
           padding: "8px 16px",
           border: "1px solid #d1d5db",
@@ -1335,8 +1351,6 @@ const SprouterProfileSystem = () => {
           </p>
         </div>
       </div>
-
-      {/* Logout Button - Bottom Left */}
     </div>
   );
 
@@ -1548,8 +1562,7 @@ const SprouterProfileSystem = () => {
             transition: "width 0.3s",
             backgroundColor: "white",
             borderRight: "1px solid #e5e7eb",
-            //overflowY: 'auto', // ← Itha change
-            //overflowX: 'hidden', // ← Itha add pannu
+            overflowX: "hidden",
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           }}
         >
@@ -1625,8 +1638,6 @@ const SprouterProfileSystem = () => {
                   display: "flex",
                   flexDirection: "column",
                   gap: "4px",
-                  //maxHeight: 'calc(100vh - 200px)', // ← Itha add pannu
-                  // overflowY: 'auto' // ← Itha add pannu
                 }}
               >
                 {dashboardFeatures.map((feature, idx) => {
@@ -1918,6 +1929,7 @@ const SprouterProfileSystem = () => {
               </div>
 
               {/* Features Grid */}
+              {/* Features Grid */}
               <h3
                 style={{
                   fontSize: "20px",
@@ -2205,10 +2217,6 @@ const SprouterProfileSystem = () => {
     );
   }
 
-  // Registration Form View (same as before)
-  // ... [Rest of the registration form code remains exactly the same]
-
-  // Registration Form View
   return (
     <div
       style={{

@@ -4,14 +4,14 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPasswor
 import { getFirestore } from "firebase/firestore";
 
 
-// Your Firebase config
+// Use env variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDQLXQkZsy8OZMa1o0BqUg78sCH7N0aI6Q",
-  authDomain: "yukthi-1d11d.firebaseapp.com",
-  projectId: "yukthi-1d11d",
-  storageBucket: "yukthi-1d11d.appspot.com",
-  messagingSenderId: "609834599136",
-  appId: "1:609834599136:web:c3765a7e40d78cba544685"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

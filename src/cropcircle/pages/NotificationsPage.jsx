@@ -16,15 +16,15 @@ import {
   ListItemText,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useAuth } from "../../context/AuthContext.jsx"; // ✅ AuthContext import
 
 const NotificationsPage = ({ selectedCircleProp }) => {
+  const { mongoUser } = useAuth(); // ✅ logged-in user
+  const userId = mongoUser?._id;
+
   const [notifications, setNotifications] = useState([]);
   const [userCircles, setUserCircles] = useState([]);
   const [selectedCircle, setSelectedCircle] = useState(selectedCircleProp || null);
-
-  const storedUser = localStorage.getItem("user");
-  const loggedInUser = storedUser ? JSON.parse(storedUser) : null;
-  const userId = loggedInUser?._id;
 
   // Fetch user's joined circles
   const fetchUserCircles = async () => {
@@ -33,9 +33,11 @@ const NotificationsPage = ({ selectedCircleProp }) => {
       const res = await axios.get(
         `http://localhost:5000/api/crop-circle/get-my-circles?user_id=${userId}`
       );
-      setUserCircles(res.data.circles || []);
-      if (!selectedCircleProp && res.data.circles.length > 0) {
-        setSelectedCircle(res.data.circles[0]._id);
+      const circles = res.data.circles || [];
+      setUserCircles(circles);
+
+      if (!selectedCircleProp && circles.length > 0) {
+        setSelectedCircle(circles[0]._id);
       }
     } catch (err) {
       console.error("Error fetching user circles:", err);
@@ -76,7 +78,7 @@ const NotificationsPage = ({ selectedCircleProp }) => {
     }
   };
 
-  // Mark as read
+  // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
       await axios.put(`http://localhost:5000/api/notifications/read/${notificationId}`);
@@ -94,8 +96,6 @@ const NotificationsPage = ({ selectedCircleProp }) => {
   const deactivateMentorQuestion = async (postId) => {
     try {
       await axios.put(`http://localhost:5000/api/notifications/deactivate/${postId}`);
-
-      // Update state and sort active first
       setNotifications((prev) =>
         prev
           .map((notif) =>
@@ -185,12 +185,19 @@ const NotificationsPage = ({ selectedCircleProp }) => {
               />
               <Box sx={{ display: "flex", gap: 1 }}>
                 {!notif.isRead && (
-                  <Button size="small" variant="outlined" onClick={() => markAsRead(notif._id)}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => markAsRead(notif._id)}
+                  >
                     Mark read
                   </Button>
                 )}
                 {notif.type === "MENTOR_QUESTION" && notif.isActive && (
-                  <IconButton color="success" onClick={() => deactivateMentorQuestion(notif.post_id?._id)}>
+                  <IconButton
+                    color="success"
+                    onClick={() => deactivateMentorQuestion(notif.post_id?._id)}
+                  >
                     <CheckCircleIcon />
                   </IconButton>
                 )}

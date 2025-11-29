@@ -1,3 +1,4 @@
+// src/cropcircle/pages/ProfilePage.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -6,10 +7,11 @@ import BottomNav from '../components/BottomNav';
 import AddPostModal from '../components/AddPostModal';
 import { Box, Typography, Button, Avatar, TextField, TextareaAutosize, Stack, useMediaQuery, Modal } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
+
 
 const ProfilePage = () => {
-  const { user: loggedInUser, logout } = useAuth();
+  const { mongoUser, idToken, logout, loading: authLoading } = useAuth();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [editMode, setEditMode] = useState(false);
@@ -19,28 +21,35 @@ const ProfilePage = () => {
   const [experienceLevel, setExperienceLevel] = useState('beginner');
   const [isMentor, setIsMentor] = useState(false);
 
-  const userId = loggedInUser?._id;
+  const userId = mongoUser?._id; // MongoDB _id from backend
   const circleId = "691458e70454e9306bf21990"; // optional, for AddPostModal
 
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
   const navigate = useNavigate();
 
-  // Fetch profile once userId is available
+  // Fetch profile when mongoUser & idToken are ready
   useEffect(() => {
-    if (!userId) return;
+    console.log("Auth loading:", authLoading, "MongoUser:", mongoUser, "idToken:", idToken);
+    if (authLoading) return;
+    if (!userId || !idToken) return;
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/users/${userId}/profile`);
+        const res = await axios.get(`http://localhost:5000/api/users/${userId}/profile`, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+
         setUser(res.data.user);
         setPosts(res.data.posts);
         setExperienceLevel(res.data.user.experience_level || 'beginner');
 
-        // Check mentor status safely
+        // Check if user is a mentor
         if (res.data.user.joined_circle) {
           try {
-            const circleRes = await axios.get(`http://localhost:5000/api/crop-circle/${res.data.user.joined_circle}`);
+            const circleRes = await axios.get(`http://localhost:5000/api/crop-circle/${res.data.user.joined_circle}`, {
+              headers: { Authorization: `Bearer ${idToken}` }
+            });
             const circle = circleRes.data.circle;
             setIsMentor(circle?.mentors?.includes(userId));
           } catch {
@@ -53,7 +62,7 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [authLoading, userId, idToken]);
 
   const handleEditClick = () => {
     setProfilePhoto(user.profile_photo || '');
@@ -63,43 +72,41 @@ const ProfilePage = () => {
     setEditMode(true);
   };
 
-  if (!user) return <Typography>Loading profile...</Typography>;
+  if (authLoading || !user) return <Typography sx={{ textAlign: 'center', mt: 5 }}>Loading profile...</Typography>;
 
   return (
     <>
-      <TopBar />
+      <TopBar showNotifications={false} />
+
       <Box sx={{ display: 'flex', justifyContent: 'center', backgroundColor: '#fafafa', minHeight: '100vh', pb: '80px' }}>
         <Box sx={{ width: '100%', maxWidth: isLargeScreen ? '75%' : 480, mx: 'auto' }}>
-
           {/* Profile Header */}
           <Box sx={{ backgroundColor: 'white', p: isLargeScreen ? 4 : 3, borderBottom: '1px solid #e0e0e0', my: 2, borderRadius: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
             <Stack direction="row" spacing={3} alignItems="center">
               <Avatar
-  src={
-    profilePhoto
-      ? typeof profilePhoto === "string"
-        ? profilePhoto.startsWith("http")
-          ? profilePhoto
-          : `http://localhost:5000${profilePhoto}`
-        : URL.createObjectURL(profilePhoto)
-      : user.profile_photo
-        ? user.profile_photo.startsWith("http")
-          ? user.profile_photo
-          : `http://localhost:5000${user.profile_photo}`
-        : "/default-avatar.png"
-  }
-  sx={{
-    width: { xs: 90, sm: 120, md: 150 },
-    height: { xs: 90, sm: 120, md: 150 },
-    objectFit: "cover",
-    borderRadius: "50%",
-    border: "3px solid #eee",
-  }}
-/>
-
+                src={
+                  profilePhoto
+                    ? typeof profilePhoto === "string"
+                      ? profilePhoto.startsWith("http")
+                        ? profilePhoto
+                        : `http://localhost:5000${profilePhoto}`
+                      : URL.createObjectURL(profilePhoto)
+                    : user.profile_photo
+                      ? user.profile_photo.startsWith("http")
+                        ? user.profile_photo
+                        : `http://localhost:5000${user.profile_photo}`
+                      : "/default-avatar.png"
+                }
+                sx={{
+                  width: { xs: 90, sm: 120, md: 150 },
+                  height: { xs: 90, sm: 120, md: 150 },
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  border: "3px solid #eee",
+                }}
+              />
 
               <Box sx={{ flex: 1 }}>
-                {/* Name + Mentor Badge */}
                 <Typography sx={{
                   fontSize: isLargeScreen ? '2.5rem' : '1.7rem',
                   fontWeight: 600,
@@ -160,12 +167,7 @@ const ProfilePage = () => {
               </Button>
             </Stack>
 
-            <Button variant="outlined" color="error" sx={{ mt: 2 }} onClick={() => {
-              logout();
-              navigate("/cropcircle/login");
-            }}>
-              Logout
-            </Button>
+           
           </Box>
 
           {/* Posts Grid */}
@@ -295,7 +297,7 @@ const ProfilePage = () => {
                 const res = await axios.patch(
                   `http://localhost:5000/api/users/${userId}/profile`,
                   formData,
-                  { headers: { "Content-Type": "multipart/form-data" } }
+                  { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${idToken}` } }
                 );
 
                 setUser(res.data.user);

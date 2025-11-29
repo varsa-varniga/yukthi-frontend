@@ -16,8 +16,14 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const AddPostModal = ({ circleId: propCircleId, onPostCreated }) => {
+  const { mongoUser } = useAuth(); // ✅ use mongoUser from context
+  const userId = mongoUser?._id;
+  const userName = mongoUser?.name;
+  const userAvatar = mongoUser?.profile_photo;
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -28,10 +34,6 @@ const AddPostModal = ({ circleId: propCircleId, onPostCreated }) => {
   const [activeCircleId, setActiveCircleId] = useState(propCircleId || null);
   const [userCircles, setUserCircles] = useState([]);
   const [fetchingCircles, setFetchingCircles] = useState(false);
-
-  const storedUser = localStorage.getItem("user");
-  const loggedInUser = storedUser ? JSON.parse(storedUser) : null;
-  const userId = loggedInUser?._id;
 
   const isMobile = useMediaQuery("(max-width:600px)");
 
@@ -44,10 +46,11 @@ const AddPostModal = ({ circleId: propCircleId, onPostCreated }) => {
         const res = await axios.get(
           `http://localhost:5000/api/crop-circle/get-my-circles?user_id=${userId}`
         );
-        if (res.data.circles?.length > 0) {
-          setUserCircles(res.data.circles);
-          if (!propCircleId) setActiveCircleId(res.data.circles[0]._id);
-        } else {
+        const circles = res.data.circles || [];
+        setUserCircles(circles);
+        if (!propCircleId && circles.length > 0) setActiveCircleId(circles[0]._id);
+
+        if (circles.length === 0) {
           alert("You need to join a crop circle before posting!");
         }
       } catch (err) {
@@ -78,7 +81,7 @@ const AddPostModal = ({ circleId: propCircleId, onPostCreated }) => {
     try {
       const formData = new FormData();
       formData.append("user_id", userId);
-      formData.append("circle_id", activeCircleId); // ✅ always correct active circle
+      formData.append("circle_id", activeCircleId);
       formData.append("title", title);
       formData.append("content", content);
       formData.append("type", type);
@@ -93,11 +96,11 @@ const AddPostModal = ({ circleId: propCircleId, onPostCreated }) => {
       const newPost = {
         id: post._id,
         title: post.title,
-        username: loggedInUser?.name || "Unknown",
-        avatarSrc: loggedInUser?.profile_photo
-          ? loggedInUser.profile_photo.startsWith("http")
-            ? loggedInUser.profile_photo
-            : `http://localhost:5000${loggedInUser.profile_photo}`
+        username: userName || "Unknown",
+        avatarSrc: userAvatar
+          ? userAvatar.startsWith("http")
+            ? userAvatar
+            : `http://localhost:5000${userAvatar}`
           : "/default-avatar.png",
         time: post.createdAt ? new Date(post.createdAt).toLocaleString("en-IN") : "Unknown",
         content: post.content,
