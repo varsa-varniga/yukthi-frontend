@@ -1,12 +1,16 @@
 // src/cropcircle/components/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { mongoUser, authLoading } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/cropcircle/login" replace />;
+  // Still checking auth
+  if (authLoading) return <div>Loading...</div>;
+
+  // Not logged in
+  if (!mongoUser) {
+    return <Navigate to="/glogin" replace />;
   }
 
   return children;

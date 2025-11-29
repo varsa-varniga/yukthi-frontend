@@ -16,10 +16,11 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CommentSection from './CommentSection';
 import axios from 'axios';
+import { useAuth } from "../../context/AuthContext.jsx"; // ✅ updated import
 
 const PostCard = ({
   id,
-  title, // ✅ new field
+  title,
   username,
   time,
   avatarSrc,
@@ -32,9 +33,8 @@ const PostCard = ({
   updatePostComments,
   deletePostFromState,
 }) => {
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const userId = user?._id || null;
+  const { mongoUser } = useAuth(); // ✅ get mongoUser
+  const userId = mongoUser?._id;
 
   const [likeCount, setLikeCount] = useState(likes.length);
   const [liked, setLiked] = useState(userId ? likes.includes(userId) : false);
@@ -47,18 +47,13 @@ const PostCard = ({
   const [commentLoading, setCommentLoading] = useState(false);
 
   // Avatar resolver
-  const getAvatar = (profilePhoto, fallbackUser) => {
+  const getAvatar = (profilePhoto) => {
     if (profilePhoto) {
       if (typeof profilePhoto === "string") {
         if (profilePhoto.startsWith("http")) return profilePhoto;
         return `http://localhost:5000${profilePhoto}`;
       }
       return URL.createObjectURL(profilePhoto);
-    }
-    if (fallbackUser?.profile_photo) {
-      return fallbackUser.profile_photo.startsWith("http")
-        ? fallbackUser.profile_photo
-        : `http://localhost:5000${fallbackUser.profile_photo}`;
     }
     return "/default-avatar.png";
   };
@@ -152,7 +147,7 @@ const PostCard = ({
       }}
     >
       <CardHeader
-        avatar={<Avatar src={getAvatar(avatarSrc, user)} sx={{ width: 55, height: 55 }} />}
+        avatar={<Avatar src={getAvatar(avatarSrc)} sx={{ width: 55, height: 55 }} />}
         action={userId === user_id && <IconButton onClick={handleDeletePost}><DeleteIcon /></IconButton>}
         title={
           <Box>

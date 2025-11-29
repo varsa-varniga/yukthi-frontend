@@ -6,9 +6,11 @@ import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 import AddPostModal from '../components/AddPostModal';
 import { Box, Button } from '@mui/material';
+import { useAuth } from "../../context/AuthContext.jsx"; // ✅ AuthContext import
 
 const UserFeedPage = () => {
   const { userId } = useParams();
+  const { mongoUser } = useAuth(); // ✅ logged-in user
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -42,11 +44,12 @@ const UserFeedPage = () => {
             : null,
           likes: Array.isArray(post.likes) ? post.likes : [],
           likedByMe: Array.isArray(post.likes)
-            ? post.likes.includes(userId)
+            ? post.likes.includes(mongoUser?._id)
             : false,
           comments: post.comments || [],
           type: post.type,
           pinned: post.pinned,
+          user_id: post.user_id?._id || post.user_id,
         }));
 
         setPosts(formattedPosts);
@@ -56,7 +59,7 @@ const UserFeedPage = () => {
     };
 
     fetchPosts();
-  }, [userId]);
+  }, [userId, mongoUser]);
 
   const updatePostComments = (postId, newComments) => {
     setPosts(prevPosts =>
@@ -118,16 +121,20 @@ const UserFeedPage = () => {
               comments={post.comments}
               type={post.type}
               pinned={post.pinned}
+              user_id={post.user_id}
               updatePostComments={updatePostComments}
             />
           ))}
         </Box>
       </Box>
 
-      <AddPostModal
-        circleId={userId}
-        onPostCreated={newPost => setPosts(prev => [newPost, ...prev])}
-      />
+      {/* Add post modal is now tied to logged-in user's circles */}
+      {mongoUser && (
+        <AddPostModal
+          circleId={userId}
+          onPostCreated={newPost => setPosts(prev => [newPost, ...prev])}
+        />
+      )}
 
       <BottomNav />
     </>

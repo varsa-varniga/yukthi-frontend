@@ -1,22 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, IconButton, Avatar, Button } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { useAuth } from '../../context/AuthContext.jsx';
 
-const Comment = ({ comment, setReplyToCommentId, depth = 0 }) => {
+const Comment = ({ comment, setReplyToCommentId, depth = 0, currentUser }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [visibleReplyCount, setVisibleReplyCount] = useState(2);
 
   const replies = comment.replies || [];
   const hasMoreReplies = replies.length > visibleReplyCount;
 
+  // Determine avatar & name
+  const avatarSrc =
+    comment.user_id?.profile_photo
+      ? comment.user_id.profile_photo.startsWith('http')
+        ? comment.user_id.profile_photo
+        : `http://localhost:5000${comment.user_id.profile_photo}`
+      : '/default-avatar.png';
+
+  const username = comment.user_id?.name || 'Unknown';
+
   return (
     <Box sx={{ mb: 1, ml: depth * 3 }}>
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', p: 1, borderRadius: 2, backgroundColor: '#f5f5f5' }}>
-        <Avatar src={comment.user_id?.profile_photo || '/default-avatar.png'}
-                sx={{ width: depth === 0 ? 30 : 25, height: depth === 0 ? 30 : 25 }} />
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          alignItems: 'flex-start',
+          p: 1,
+          borderRadius: 2,
+          backgroundColor: '#f5f5f5',
+        }}
+      >
+        <Avatar
+          src={avatarSrc}
+          sx={{ width: depth === 0 ? 30 : 25, height: depth === 0 ? 30 : 25 }}
+        />
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontWeight: 600, fontSize: depth === 0 ? '0.9rem' : '0.85rem' }}>
-            {comment.user_id?.name || 'Unknown'}
+            {username}
           </Typography>
           <Typography sx={{ fontSize: depth === 0 ? '0.85rem' : '0.8rem', color: '#555' }}>
             {comment.text}
@@ -35,19 +57,29 @@ const Comment = ({ comment, setReplyToCommentId, depth = 0 }) => {
             <Box sx={{ mt: 1 }}>
               {showReplies &&
                 replies.slice(0, visibleReplyCount).map((reply) => (
-                  <Comment key={reply._id} comment={reply} setReplyToCommentId={setReplyToCommentId} depth={depth + 1} />
+                  <Comment
+                    key={reply._id}
+                    comment={reply}
+                    setReplyToCommentId={setReplyToCommentId}
+                    depth={depth + 1}
+                    currentUser={currentUser}
+                  />
                 ))}
 
               {!showReplies && (
-                <Button onClick={() => setShowReplies(true)}
-                        sx={{ textTransform: 'none', fontSize: '0.75rem', color: '#555', p: 0.5 }}>
+                <Button
+                  onClick={() => setShowReplies(true)}
+                  sx={{ textTransform: 'none', fontSize: '0.75rem', color: '#555', p: 0.5 }}
+                >
                   View {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
                 </Button>
               )}
 
               {showReplies && hasMoreReplies && (
-                <Button onClick={() => setVisibleReplyCount(prev => prev + 2)}
-                        sx={{ textTransform: 'none', fontSize: '0.75rem', color: '#555', p: 0.5 }}>
+                <Button
+                  onClick={() => setVisibleReplyCount((prev) => prev + 2)}
+                  sx={{ textTransform: 'none', fontSize: '0.75rem', color: '#555', p: 0.5 }}
+                >
                   View more replies
                 </Button>
               )}
@@ -59,23 +91,46 @@ const Comment = ({ comment, setReplyToCommentId, depth = 0 }) => {
   );
 };
 
-const CommentSection = ({ comments = [], commentText, setCommentText, handleCommentSubmit, setReplyToCommentId, replyToCommentId }) => {
+const CommentSection = ({
+  comments = [],
+  commentText,
+  setCommentText,
+  handleCommentSubmit,
+  setReplyToCommentId,
+  replyToCommentId,
+}) => {
+  const { mongoUser } = useAuth();
   const [showAllComments, setShowAllComments] = useState(false);
+  const commentsEndRef = useRef(null);
 
   const visibleComments = showAllComments ? comments : comments.slice(-3);
+
+  // Scroll to bottom on new comment
+  useEffect(() => {
+    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [comments.length]);
 
   return (
     <Box>
       {comments.length > 3 && !showAllComments && (
-        <Button onClick={() => setShowAllComments(true)}
-                sx={{ textTransform: 'none', mb: 1, fontSize: '0.85rem', color: '#555' }}>
+        <Button
+          onClick={() => setShowAllComments(true)}
+          sx={{ textTransform: 'none', mb: 1, fontSize: '0.85rem', color: '#555' }}
+        >
           View {comments.length - 3} more comment{comments.length - 3 > 1 ? 's' : ''}
         </Button>
       )}
 
       {visibleComments.map((comment) => (
-        <Comment key={comment._id} comment={comment} setReplyToCommentId={setReplyToCommentId} />
+        <Comment
+          key={comment._id}
+          comment={comment}
+          setReplyToCommentId={setReplyToCommentId}
+          currentUser={mongoUser}
+        />
       ))}
+
+      <Box ref={commentsEndRef} />
 
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1 }}>
         <TextField
@@ -88,8 +143,12 @@ const CommentSection = ({ comments = [], commentText, setCommentText, handleComm
         />
         <IconButton
           color="primary"
-          onClick={handleCommentSubmit}
-          sx={{ backgroundColor: '#16a085', '&:hover': { backgroundColor: '#138d75' }, color: '#fff' }}
+          onClick={() => handleCommentSubmit(mongoUser?._id)}
+          sx={{
+            backgroundColor: '#16a085',
+            '&:hover': { backgroundColor: '#138d75' },
+            color: '#fff',
+          }}
         >
           <SendIcon />
         </IconButton>

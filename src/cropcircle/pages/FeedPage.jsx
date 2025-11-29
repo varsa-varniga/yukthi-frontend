@@ -8,14 +8,22 @@ import {
   Typography,
   AppBar,
   Toolbar,
+  Select,
+  MenuItem,
+  useMediaQuery,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PostCard from "../components/PostCard.jsx";
 import AddPostModal from "../components/AddPostModal.jsx";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const FeedPage = () => {
+  const { mongoUser } = useAuth();
+  const userId = mongoUser?._id;
+  const navigate = useNavigate();
+
   const [posts, setPosts] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -23,13 +31,9 @@ const FeedPage = () => {
   const [activeCircle, setActiveCircle] = useState(null);
   const [role, setRole] = useState("");
 
-  const storedUser = localStorage.getItem("user");
-  const loggedInUser = storedUser ? JSON.parse(storedUser) : null;
-  const userId = loggedInUser?._id;
+  const isMobile = useMediaQuery("(max-width:600px)");
 
-  const navigate = useNavigate();
-
-  // --- Fetch user's circles ---
+  // --- Fetch user circles ---
   const fetchUserCircles = async () => {
     if (!userId) return;
     try {
@@ -40,18 +44,19 @@ const FeedPage = () => {
       setCircles(userCircles);
 
       if (userCircles.length > 0) {
-        setActiveCircle(userCircles[0]);
-        const activeRole = userCircles[0].mentors.includes(userId)
-          ? "Mentor"
-          : "Learner";
-        setRole(activeRole);
+        const firstCircle = userCircles[0];
+        setActiveCircle(firstCircle);
+        setRole(
+          firstCircle.mentors.map(String).includes(String(userId))
+            ? "Mentor"
+            : "Learner"
+        );
       }
     } catch (err) {
       console.error("Error fetching user circles:", err);
     }
   };
 
-  // --- Fetch posts for active circle ---
   const fetchPosts = async (circleId) => {
     if (!circleId) return;
     try {
@@ -68,7 +73,6 @@ const FeedPage = () => {
     }
   };
 
-  // --- Fetch notifications ---
   const fetchNotifications = async () => {
     if (!userId) return;
     try {
@@ -76,8 +80,18 @@ const FeedPage = () => {
         `http://localhost:5000/api/notifications/${userId}`
       );
       const sorted = res.data.notifications.sort((a, b) => {
-        if (a.type === "MENTOR_QUESTION" && a.isActive && !(b.type === "MENTOR_QUESTION" && b.isActive)) return -1;
-        if (!(a.type === "MENTOR_QUESTION" && a.isActive) && b.type === "MENTOR_QUESTION" && b.isActive) return 1;
+        if (
+          a.type === "MENTOR_QUESTION" &&
+          a.isActive &&
+          !(b.type === "MENTOR_QUESTION" && b.isActive)
+        )
+          return -1;
+        if (
+          !(a.type === "MENTOR_QUESTION" && a.isActive) &&
+          b.type === "MENTOR_QUESTION" &&
+          b.isActive
+        )
+          return 1;
         if (!a.isRead && b.isRead) return -1;
         if (a.isRead && !b.isRead) return 1;
         return new Date(b.createdAt) - new Date(a.createdAt);
@@ -88,62 +102,19 @@ const FeedPage = () => {
     }
   };
 
-  // Poll notifications
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, [userId]);
 
-  // Fetch circles on load
   useEffect(() => {
     fetchUserCircles();
   }, [userId]);
 
-  // Fetch posts whenever active circle changes
   useEffect(() => {
     if (activeCircle) fetchPosts(activeCircle._id);
   }, [activeCircle]);
-
-  // --- Update post comments and handle mentor replies ---
-  const updatePostComments = async (postId, newComments) => {
-    try {
-      const mentorAnswered = newComments.some(
-        (c) => c.user_id && activeCircle.mentors.includes(c.user_id._id)
-      );
-
-      if (mentorAnswered) {
-        // Call backend to permanently unpin
-        await axios.put(`http://localhost:5000/api/posts/unpin/${postId}`);
-      }
-
-      // Update local state
-      setPosts((prev) => {
-        const updatedPosts = prev.map((p) => {
-          if (p._id === postId) {
-            return { ...p, comments: newComments, pinned: p.pinned && !mentorAnswered };
-          }
-          return p;
-        });
-
-        return updatedPosts.sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-      });
-    } catch (err) {
-      console.error("[UPDATE POST COMMENTS] Error:", err);
-    }
-  };
-
-  const deletePostFromState = (postId) => {
-    setPosts((prev) => prev.filter((p) => p._id !== postId));
-  };
-
-  const handlePostCreated = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
-  };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -151,30 +122,44 @@ const FeedPage = () => {
     <Box sx={{ width: "100%", maxWidth: 1000, mx: "auto", px: 2, pt: 0 }}>
       {/* Top App Bar */}
       <AppBar position="sticky" sx={{ bgcolor: "primary.main" }} elevation={3}>
-        <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Toolbar
+          sx={{
+            justifyContent: "space-between",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 1 : 0,
+            py: isMobile ? 1 : 0,
+          }}
+        >
           {/* Circle selector */}
           {circles.length > 0 ? (
-            <select
+            <Select
               value={activeCircle?._id || ""}
               onChange={(e) => {
                 const selected = circles.find((c) => c._id === e.target.value);
                 setActiveCircle(selected);
-                setRole(selected.mentors.includes(userId) ? "Mentor" : "Learner");
+                setRole(
+                  selected.mentors.map(String).includes(String(userId))
+                    ? "Mentor"
+                    : "Learner"
+                );
               }}
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                background: "transparent",
-                border: "none",
+              sx={{
+                minWidth: isMobile ? "100%" : 200,
                 color: "white",
+                fontWeight: 600,
+                "& .MuiSvgIcon-root": { color: "white" },
+                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                bgcolor: "rgba(255,255,255,0.1)",
+                borderRadius: 1,
+                px: 1,
               }}
             >
               {circles.map((circle) => (
-                <option key={circle._id} value={circle._id}>
+                <MenuItem key={circle._id} value={circle._id}>
                   {circle.name || `${circle.crop_name} - ${circle.district}`}
-                </option>
+                </MenuItem>
               ))}
-            </select>
+            </Select>
           ) : (
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               CropCircle Feed
@@ -184,6 +169,7 @@ const FeedPage = () => {
           <IconButton
             onClick={() => navigate("/cropcircle/notifications")}
             color="inherit"
+            sx={{ mt: isMobile ? 1 : 0 }}
           >
             <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon />
@@ -212,8 +198,8 @@ const FeedPage = () => {
               type={post.type}
               pinned={post.pinned}
               user_id={post.user_id?._id}
-              updatePostComments={updatePostComments}
-              deletePostFromState={deletePostFromState}
+              updatePostComments={() => {}}
+              deletePostFromState={() => {}}
             />
           ))
         ) : (
@@ -241,7 +227,7 @@ const FeedPage = () => {
         <AddPostModal
           userId={userId}
           circleId={activeCircle._id}
-          onPostCreated={handlePostCreated}
+          onPostCreated={() => {}}
         />
       )}
     </Box>
