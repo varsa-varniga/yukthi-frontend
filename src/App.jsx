@@ -39,7 +39,7 @@ import Ecom from "./ecommerce/Ecom.jsx";
 // Carbon Credit
 import FarmerCarbonCreditCalculator from "./carboncredit/CarbonCreditMonetization.jsx";
 
-// Learning Path - Add this import
+// Learning Path
 import LearningPathApp from "./learningpathcomponents/App.jsx";
 
 // Layout
@@ -58,15 +58,31 @@ import SelectCrop from "./cropcircle/pages/SelectCrop.jsx";
 import NotificationsPage from "./cropcircle/pages/NotificationsPage";
 
 // Post Harvest
-// Post Harvest
-import PostHome from "./postharvest/PostHome.jsx"; // Add this
+import PostHome from "./postharvest/PostHome.jsx";
 import Alerts from "./postharvest/Alerts.jsx";
 import MandiPrice from "./postharvest/MandiPrice.jsx";
 import NearbyTransport from "./postharvest/NearbyTransport.jsx";
 import GrainType from "./postharvest/GrainType.jsx";
 import Aggregator from "./postharvest/Aggregator.jsx";
+
 // Auth Context
 import { AuthProvider } from "./context/AuthContext";
+
+
+//ageopulse
+import AgroPulse from "./agropulse/Farm_readinessAI.jsx";
+
+
+
+ 
+// Subsidies Components
+import SubsidiesDashboard from "./subsidies/SubsidiesDahboard.jsx";
+import SchemeBrowser from "./subsidies/pages/SchemeBrowser.jsx";
+import Applications from "./subsidies/pages/Applications.jsx";
+import Profile from "./subsidies/pages/Profile.jsx";
+
+// Auth Contexts
+import { AuthProvider as SubsidiesAuthProvider } from "./subsidies/contexts/AuthContext"; // Subsidies auth
 
 const ProtectedLayout = ({ children }) => (
   <>
@@ -75,120 +91,156 @@ const ProtectedLayout = ({ children }) => (
   </>
 );
 
+// Subsidies Auth Wrapper Component
+const SubsidiesAuthWrapper = ({ children }) => {
+  return <SubsidiesAuthProvider>{children}</SubsidiesAuthProvider>;
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* PUBLIC ROUTES WITH NAVBAR & FOOTER */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<HeroPage />} />
-              <Route
-                path="/features"
-                element={
-                  <>
-                    <Welcome />
-                    <Climate />
-                    <Disease />
-                    <Fertilizer />
-                    <Carbon />
-                    <Chat />
-                    <Hubs />
-                  </>
-                }
-              />
-              <Route path="/about" element={<AboutUs />} />
-              {/* REMOVE carbon-credit and learning-path from here */}
-            </Route>
+       <BrowserRouter>
+  <Routes>
+    {/* PUBLIC ROUTES WITH NAVBAR & FOOTER */}
+    <Route element={<Layout />}>
+      <Route path="/" element={<HeroPage />} />
+      <Route
+        path="/features"
+        element={
+          <>
+            <Welcome />
+            <Climate />
+            <Disease />
+            <Fertilizer />
+            <Carbon />
+            <Chat />
+            <Hubs />
+          </>
+        }
+      />
+      <Route path="/about" element={<AboutUs />} />
+    </Route>
 
-            {/* FEATURE ROUTES WITHOUT NAVBAR */}
-            <Route
-              path="/carbon-credit"
-              element={<FarmerCarbonCreditCalculator />}
-            />
-            <Route path="/learning-path" element={<LearningPathApp />} />
+    {/* FEATURE ROUTES WITHOUT NAVBAR */}
+    <Route path="/carbon-credit" element={<FarmerCarbonCreditCalculator />} />
+    <Route path="/learning-path" element={<LearningPathApp />} />
 
-            {/* OTHER FEATURE ROUTES WITHOUT NAVBAR */}
-            <Route path="/land-leasing" element={<LandHome />} />
-            <Route path="/list-land" element={<ListYourLand />} />
-            <Route path="/file-explorer" element={<FileExplorerDemo />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/soil-connect" element={<SoilConnect />} />
-            <Route path="/ecom" element={<Ecom />} />
+    {/* DASHBOARDS */}
+    <Route path="/sprouter" element={<SprouterDashboard />} />
+    <Route path="/cultivator" element={<CultivatorDashboard />} />
 
-            {/* POST HARVEST HUB ROUTES */}
-         
-<Route path="/postharvest" element={<PostHome />} />
-<Route path="/postharvest/alerts" element={<Alerts />} />
-<Route path="/postharvest/mandi-prices" element={<MandiPrice />} />
-<Route path="/postharvest/transport" element={<NearbyTransport />} />
-<Route path="/postharvest/grains" element={<GrainType />} />
-<Route path="/postharvest/Aggregator" element={<Aggregator />} />
+    {/* AGROPULSE */}
+    <Route path="/ai" element={<AgroPulse />} />
 
-            {/* CARBON CREDIT */}
-            <Route path="/carbon-credit" element={<FarmerCarbonCreditCalculator />} />
-            {/* AUTH ROUTES WITHOUT NAVBAR */}
-            <Route path="/login" element={<AuthSystem />} />
-            <Route path="/glogin" element={<GLogin />} />
-            <Route path="/select-role" element={<RoleSelection />} />
+    {/* LAND LEASING */}
+    <Route path="/land-leasing" element={<LandHome />} />
+    <Route path="/list-land" element={<ListYourLand />} />
+    <Route path="/file-explorer" element={<FileExplorerDemo />} />
+    <Route path="/explore" element={<Explore />} />
 
-            {/* DASHBOARD ROUTES WITHOUT NAVBAR */}
-            <Route path="/sprouter" element={<SprouterDashboard />} />
-            <Route path="/cultivator" element={<CultivatorDashboard />} />
+    {/* SOIL CONNECT & ECOM */}
+    <Route path="/soil-connect" element={<SoilConnect />} />
+    <Route path="/ecom" element={<Ecom />} />
 
-            {/* CROPCIRCLE ROUTES WITHOUT NAVBAR */}
-            <Route path="/cropcircle" element={<AuthSystem />} />
-            <Route path="/cropcircle/login" element={<AuthSystem />} />
-            <Route path="/cropcircle/select-crop" element={<SelectCrop />} />
+    {/* POST HARVEST HUB */}
+    <Route path="/postharvest" element={<PostHome />} />
+    <Route path="/postharvest/alerts" element={<Alerts />} />
+    <Route path="/postharvest/mandi-prices" element={<MandiPrice />} />
+    <Route path="/postharvest/transport" element={<NearbyTransport />} />
+    <Route path="/postharvest/grains" element={<GrainType />} />
+    <Route path="/postharvest/aggregator" element={<Aggregator />} />
 
-            <Route
-              path="/cropcircle/home"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <FeedPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
+    {/* AUTH ROUTES */}
+    <Route path="/login" element={<AuthSystem />} />
+    <Route path="/glogin" element={<GLogin />} />
+    <Route path="/select-role" element={<RoleSelection />} />
 
-            <Route
-              path="/cropcircle/notifications"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <NotificationsPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
+    {/* CROPCIRCLE ROUTES */}
+    <Route path="/cropcircle" element={<Navigate to="/cropcircle/login" replace />} />
+    <Route path="/cropcircle/login" element={<AuthSystem />} />
+    <Route path="/cropcircle/select-crop" element={<SelectCrop />} />
 
-            <Route
-              path="/cropcircle/profile"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <ProfilePage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
+    <Route
+      path="/cropcircle/home"
+      element={
+        <ProtectedRoute>
+          <ProtectedLayout>
+            <FeedPage />
+          </ProtectedLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cropcircle/notifications"
+      element={
+        <ProtectedRoute>
+          <ProtectedLayout>
+            <NotificationsPage />
+          </ProtectedLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cropcircle/profile"
+      element={
+        <ProtectedRoute>
+          <ProtectedLayout>
+            <ProfilePage />
+          </ProtectedLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cropcircle/profile/:userId/feed"
+      element={
+        <ProtectedRoute>
+          <ProtectedLayout>
+            <UserFeedPage />
+          </ProtectedLayout>
+        </ProtectedRoute>
+      }
+    />
 
-            <Route
-              path="/cropcircle/profile/:userId/feed"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout>
-                    <UserFeedPage />
-                  </ProtectedLayout>
-                </ProtectedRoute>
-              }
-            />
+    {/* SUBSIDIES ROUTES WITH THEIR OWN AUTH PROVIDER */}
+    <Route
+      path="/financial-empower"
+      element={
+        <SubsidiesAuthWrapper>
+          <SubsidiesDashboard />
+        </SubsidiesAuthWrapper>
+      }
+    />
+    <Route
+      path="/schemes"
+      element={
+        <SubsidiesAuthWrapper>
+          <SchemeBrowser />
+        </SubsidiesAuthWrapper>
+      }
+    />
+    <Route
+      path="/applications"
+      element={
+        <SubsidiesAuthWrapper>
+          <Applications />
+        </SubsidiesAuthWrapper>
+      }
+    />
+    <Route
+      path="/profile"
+      element={
+        <SubsidiesAuthWrapper>
+          <Profile />
+        </SubsidiesAuthWrapper>
+      }
+    />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+    {/* CATCH-ALL */}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+</BrowserRouter>
+
       </AuthProvider>
     </ThemeProvider>
   );
