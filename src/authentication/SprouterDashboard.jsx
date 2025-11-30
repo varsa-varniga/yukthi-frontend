@@ -277,6 +277,9 @@ const SprouterProfileSystem = () => {
       navigate('/ecom');
       return;
     }
+    if(featureId === 'ai'){
+      navigate('/ai');
+    }
 
     // ✅ UPDATED: CROP CIRCLE - REDIRECT TO SIGNUP PAGE
     if (featureId === 'community') {

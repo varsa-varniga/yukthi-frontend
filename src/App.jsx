@@ -57,6 +57,14 @@ import NotificationsPage from "./cropcircle/pages/NotificationsPage";
 // Auth Context
 import { AuthProvider } from "./context/AuthContext";
 
+
+//ageopulse
+import AgroPulse from "./agropulse/Farm_readinessAI.jsx";
+
+
+
+ 
+
 const ProtectedLayout = ({ children }) => (
   <>
     {children}
@@ -98,6 +106,11 @@ function App() {
             {/* DASHBOARDS */}
             <Route path="/sprouter" element={<SprouterDashboard />} />
             <Route path="/cultivator" element={<CultivatorDashboard />} />
+
+
+
+            {/*AGROPULSE*/}
+            <Route path="/ai" element={<AgroPulse/>}/>
 
             {/* LAND LEASING */}
             <Route path="/land-leasing" element={<LandHome />} />
