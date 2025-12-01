@@ -1,6 +1,5 @@
 import React from "react";
 import { Typography, Box, useMediaQuery, useTheme } from "@mui/material";
-import HeroVideo from "../assets/Hero_Page.mp4";
 
 const HeroPage = () => {
   const theme = useTheme();
@@ -10,7 +9,7 @@ const HeroPage = () => {
     <Box
       sx={{
         position: "relative",
-        width: "98vw",
+        width: "100vw",
         height: "100vh",
         overflow: "hidden",
       }}
@@ -31,11 +30,11 @@ const HeroPage = () => {
           zIndex: -1,
         }}
       >
-        <source src={HeroVideo} type="video/mp4" />
+        <source src="/assets/Hero_Page.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* Overlay Content with Page Padding */}
+      {/* Overlay Content */}
       <Box
         sx={{
           position: "relative",
@@ -46,7 +45,7 @@ const HeroPage = () => {
           justifyContent: "center",
           color: "white",
           backgroundColor: "rgba(0, 0, 0, 0.4)",
-          px: { xs: 2, sm: 6, md: 8 }, // responsive left/right gap
+          px: { xs: 2, sm: 6, md: 8 },
           py: { xs: 4, md: 6 },
         }}
       >

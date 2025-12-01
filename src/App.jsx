@@ -21,20 +21,16 @@ import RoleSelection from "./authentication/RoleSelection.jsx";
 import SprouterDashboard from "./authentication/SprouterDashboard.jsx";
 import CultivatorDashboard from "./authentication/CultivatorDashboard.jsx";
 
-// LAND LEASING imports
+// Land Leasing
 import LandHome from "./landleasing/LandHome.jsx";
-import Explore from "./landleasing/pages/Explore.jsx";
-
 import ListYourLand from "./landleasing/landlist/ListYourLand.jsx";
 import FileExplorerDemo from "./landleasing/FileExplorerDemo/FileExplorerDemo.jsx";
-
-// Dashboard files
 import DashboardHome from "./landleasing/dashboard/Home.jsx";
 import MyLease from "./landleasing/dashboard/MyLease.jsx";
 import SavedLand from "./landleasing/dashboard/SavedLand.jsx";
 import Document from "./landleasing/dashboard/Document.jsx";
 import ViewAgreement from "./landleasing/dashboard/ViewAgreement.jsx";
-
+import Explore from "./landleasing/pages/Explore.jsx";
 
 // Soil Connect & Ecommerce
 import SoilConnect from "./soilconnect/SoilConnect.jsx";
@@ -139,26 +135,6 @@ function App() {
             <Route path="/sprouter" element={<SprouterDashboard />} />
             <Route path="/cultivator" element={<CultivatorDashboard />} />
 
-{/* LAND LEASING */}
-
-<Route path="/land-leasing" element={<LandHome />} />
-
-<Route path="/explore" element={<Explore />} />
-<Route path="/list-land" element={<ListYourLand />} />
-<Route path="/file-explorer" element={<FileExplorerDemo />} />
-
-{/* Dashboard nested */}
-<Route path="/dashboard" element={<DashboardHome />}>
-  <Route index element={<MyLease />} />
-  <Route path="saved" element={<SavedLand />} />
-  <Route path="documents" element={<Document />} />
-</Route>
-
-{/* Add ViewAgreement as separate route */}
-<Route path="/view-agreement" element={<ViewAgreement />} />
-
-
-    
             {/* AGROPULSE */}
             <Route path="/ai" element={<AgroPulse />} />
 
